@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: inventory-api
+    env: docker
+    dockerfilePath: backend/InventoryApp.Api/Dockerfile
+    envVars:
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase: INVENTORY_DB_CONNECTION_STRING # set in UI
+      - key: Jwt__Key
+        value: Replace_this_with_prod_secret
+      - key: Jwt__Issuer
+        value: InventoryApp
+      - key: Jwt__Audience
+        value: InventoryAppClient
+  - type: web
+    name: inventory-web
+    env: docker
+    dockerfilePath: frontend/inventory-app-web/Dockerfile
+    envVars:
+      - key: VITE_API_BASE
+        value: https://inventory-api.onrender.com # adjust
