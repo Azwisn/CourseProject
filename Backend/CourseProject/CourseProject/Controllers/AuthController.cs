@@ -11,10 +11,12 @@ using Microsoft.AspNetCore.Mvc;
 public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IConfiguration _config;
 
-    public AuthController(UserManager<ApplicationUser> userManager)
+    public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config)
     {
         _userManager = userManager;
+        _config = config;
     }
 
     [HttpGet("me")]
@@ -29,7 +31,8 @@ public class AuthController : ControllerBase
     [HttpGet("google-login")]
     public IActionResult GoogleLogin()
     {
-        var properties = new AuthenticationProperties { RedirectUri = "/api/auth/google-callback" };
+        var redirectUri = Url.Action(nameof(GoogleCallback), "Auth");
+        var properties = new AuthenticationProperties { RedirectUri = redirectUri };
         return Challenge(properties, GoogleDefaults.AuthenticationScheme);
     }
 
@@ -38,6 +41,15 @@ public class AuthController : ControllerBase
     {
         var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         if (!result.Succeeded) return Unauthorized();
-        return Redirect("https://<your-frontend-domain>.onrender.com");
+
+        return Redirect("https://courseproject-uwt8.onrender.com");
+    }
+
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return Ok();
     }
 }

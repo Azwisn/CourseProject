@@ -2,6 +2,7 @@
 using CourseProject.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 namespace CourseProject.Hubs
 {
@@ -13,7 +14,7 @@ namespace CourseProject.Hubs
 
         public async Task SendPost(Guid inventoryId, string contentMd)
         {
-            var userId = Context.UserIdentifier;
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var post = new DiscussionPost { InventoryId = inventoryId, UserId = userId, ContentMd = contentMd };
             _db.DiscussionPosts.Add(post);
             await _db.SaveChangesAsync();

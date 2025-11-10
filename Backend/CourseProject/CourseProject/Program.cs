@@ -7,22 +7,23 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Чтение переменных окружения (Render)
-var googleClientId = builder.Configuration["GOOGLE_CLIENT_ID"];
-var googleClientSecret = builder.Configuration["GOOGLE_CLIENT_SECRET"];
+// --- Настройки окружения ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                        ?? builder.Configuration["DATABASE_URL"];
 
-// DB
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+// --- Database ---
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Identity
+// --- Identity ---
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// Auth
+// --- Auth ---
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -35,28 +36,34 @@ builder.Services.AddAuthentication(options =>
 })
 .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
 {
-    options.ClientId = googleClientId;
-    options.ClientSecret = googleClientSecret;
+    options.ClientId = googleClientId!;
+    options.ClientSecret = googleClientSecret!;
+    options.CallbackPath = "/api/auth/google-callback";
 });
 
-// CORS (для фронта Render)
+// --- CORS ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("RenderFrontend", policy =>
     {
-        policy.WithOrigins("https://<your-frontend-domain>.onrender.com") // <- фронт Render
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy.WithOrigins(
+            "https://courseproject-uwt8.onrender.com" // frontend Render URL без /api
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
     });
 });
 
+// --- Controllers, Swagger ---
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// --- Middleware ---
+app.UseHttpsRedirection();
 app.UseCors("RenderFrontend");
 app.UseAuthentication();
 app.UseAuthorization();

@@ -15,7 +15,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const token = localStorage.getItem("jwt");
         if (token) {
             axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-            // Optionally load user profile
             setUser({ id: "me", username: "me" });
         }
     }, []);
