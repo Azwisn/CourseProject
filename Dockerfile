@@ -18,9 +18,11 @@ WORKDIR /src
 COPY Backend/CourseProject/CourseProject/*.csproj ./CourseProject/
 RUN dotnet restore ./CourseProject/CourseProject.csproj
 
-# Копируем всё остальное и билдим
+# Копируем исходники и собираем
 COPY Backend/CourseProject/CourseProject/. ./CourseProject/
+# Копируем собранный фронт в wwwroot
 COPY --from=frontend-build /app/frontend/dist ./CourseProject/wwwroot
+
 WORKDIR /src/CourseProject
 RUN dotnet publish -c Release -o /app/publish
 
@@ -30,6 +32,9 @@ RUN dotnet publish -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-ENV ASPNETCORE_URLS=http://+:10000
+
+# Render задаёт порт через переменную среды PORT
+ENV ASPNETCORE_URLS=http://+:${PORT}
 EXPOSE 10000
+
 ENTRYPOINT ["dotnet", "CourseProject.dll"]
